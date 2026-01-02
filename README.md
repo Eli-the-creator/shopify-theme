@@ -1,2 +1,0 @@
-# shopify-theme
-# shopify-theme
