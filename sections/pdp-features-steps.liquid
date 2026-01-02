@@ -1,0 +1,535 @@
+{% liquid
+  assign use_theme_colors = section.settings.use_theme_colors
+  if use_theme_colors == nil
+    assign use_theme_colors = true
+  endif
+
+  if use_theme_colors
+    assign background_color = settings.global_section_background_color
+    assign text_color = settings.global_section_text_color
+    assign accent_color = settings.global_section_accent_1_color
+  else
+    assign background_color = section.settings.background_color
+    assign text_color = section.settings.text_color
+    assign accent_color = section.settings.accent_color
+  endif
+%}
+
+<style>
+  .pdp-steps.section-{{ section.id }} {
+    background: {{ background_color }};
+    color: {{ text_color }};
+    padding: {{ section.settings.padding_top }}px {{ section.settings.side_padding }}px {{ section.settings.padding_bottom }}px;
+    margin-top: {{ section.settings.margin_top }}px;
+    margin-bottom: {{ section.settings.margin_bottom }}px;
+    letter-spacing: var(--letter-spacing-body);
+  }
+
+  .pdp-steps__inner {
+    max-width: {{ section.settings.max_width }}px;
+    margin: 0 auto;
+    display: grid;
+    gap: 18px;
+  }
+
+  .pdp-steps__header {
+    display: grid;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .pdp-steps__eyebrow {
+    display: inline-flex;
+    justify-self: center;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: {{ accent_color | color_lighten: 40 }};
+    color: {{ accent_color }};
+    font-weight: var(--font-weight-medium);
+  }
+
+  .pdp-steps__heading {
+    margin: 0;
+    font-size: {{ section.settings.heading_size }}px;
+    letter-spacing: var(--letter-spacing-heading);
+  }
+
+  .pdp-steps__subheading {
+    margin: 0;
+    color: {{ section.settings.subheading_color | default: text_color }};
+    max-width: 760px;
+    justify-self: center;
+    line-height: 1.5;
+  }
+
+  .pdp-steps__list {
+    display: grid;
+    gap: {{ section.settings.step_gap }}px;
+  }
+
+  .pdp-step {
+    display: grid;
+    gap: 16px;
+    padding: {{ section.settings.step_padding }}px;
+    border-radius: {{ section.settings.step_radius }}px;
+    background: {{ section.settings.step_background }};
+    border: {{ section.settings.step_border_width }}px solid {{ section.settings.step_border_color }};
+    align-items: center;
+  }
+
+  @media (min-width: 900px) {
+    .pdp-step {
+      grid-template-columns: {% if section.settings.layout_style == 'alternating' %} repeat(2, minmax(0, 1fr)) {% else %} minmax(0, {{ section.settings.media_width }}%) minmax(0, {{ 100 | minus: section.settings.media_width }}%) {% endif %};
+    }
+
+    {% if section.settings.layout_style == 'alternating' %}
+      .pdp-step:nth-child(even) {
+        grid-template-columns: minmax(0, {{ 100 | minus: section.settings.media_width }}%) minmax(0, {{ section.settings.media_width }}%);
+      }
+      .pdp-step:nth-child(even) .pdp-step__media {
+        order: 2;
+      }
+    {% endif %}
+  }
+
+  .pdp-step__media {
+    position: relative;
+    border-radius: {{ section.settings.media_radius }}px;
+    overflow: hidden;
+    background: {{ section.settings.media_background }};
+    min-height: 240px;
+  }
+
+  .pdp-step__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .pdp-step__video {
+    position: relative;
+    padding-top: {{ section.settings.video_aspect_ratio }}%;
+  }
+
+  .pdp-step__video iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .pdp-step__content {
+    display: grid;
+    gap: 10px;
+  }
+
+  .pdp-step__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: {{ accent_color | color_lighten: 42 }};
+    color: {{ accent_color }};
+    font-size: 12px;
+    width: fit-content;
+  }
+
+  .pdp-step__title {
+    margin: 0;
+    font-size: {{ section.settings.step_title_size }}px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .pdp-step__number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: {{ accent_color }};
+    color: {{ settings.global_section_background_color }};
+    font-weight: var(--font-weight-bold);
+    font-size: 14px;
+  }
+
+  .pdp-step__text {
+    margin: 0;
+    color: {{ section.settings.step_text_color }};
+    line-height: 1.6;
+  }
+</style>
+
+<div class="pdp-steps section-{{ section.id }}">
+  <div class="pdp-steps__inner">
+    <div class="pdp-steps__header">
+      {% if section.settings.eyebrow != blank %}
+        <div class="pdp-steps__eyebrow">
+          {% if section.settings.eyebrow_icon != blank %}
+            <img src="{{ section.settings.eyebrow_icon | img_url: '60x' }}" alt="" width="18" height="18" loading="lazy">
+          {% endif %}
+          <span>{{ section.settings.eyebrow }}</span>
+        </div>
+      {% endif %}
+
+      {% if section.settings.heading != blank %}
+        <h2 class="pdp-steps__heading">{{ section.settings.heading }}</h2>
+      {% endif %}
+
+      {% if section.settings.subheading != blank %}
+        <p class="pdp-steps__subheading">{{ section.settings.subheading }}</p>
+      {% endif %}
+    </div>
+
+    <div class="pdp-steps__list">
+      {% for block in section.blocks %}
+        <div class="pdp-step" {{ block.shopify_attributes }}>
+          <div class="pdp-step__media">
+            {% if block.settings.video_url != blank %}
+              <div class="pdp-step__video">
+                {% if block.settings.video_url.type == 'youtube' %}
+                  <iframe src="https://www.youtube.com/embed/{{ block.settings.video_url.id }}?rel=0&showinfo=0" allowfullscreen title="{{ block.settings.media_alt | escape }}"></iframe>
+                {% elsif block.settings.video_url.type == 'vimeo' %}
+                  <iframe src="https://player.vimeo.com/video/{{ block.settings.video_url.id }}" allowfullscreen title="{{ block.settings.media_alt | escape }}"></iframe>
+                {% endif %}
+              </div>
+            {% elsif block.settings.image != blank %}
+              <img src="{{ block.settings.image | img_url: '900x' }}" alt="{{ block.settings.media_alt | escape }}" loading="lazy">
+            {% else %}
+              <div style="width:100%;height:100%;background: {{ section.settings.media_background }};"></div>
+            {% endif %}
+          </div>
+
+          <div class="pdp-step__content">
+            {% if block.settings.badge != blank %}
+              <div class="pdp-step__badge">
+                {% if block.settings.badge_icon != blank %}
+                  <img src="{{ block.settings.badge_icon | img_url: '60x' }}" alt="" width="14" height="14" loading="lazy">
+                {% endif %}
+                {{ block.settings.badge }}
+              </div>
+            {% endif %}
+
+            {% if block.settings.title != blank %}
+              <h3 class="pdp-step__title">
+                {% if section.settings.show_numbers %}
+                  <span class="pdp-step__number">{{ forloop.index }}</span>
+                {% endif %}
+                <span>{{ block.settings.title }}</span>
+              </h3>
+            {% endif %}
+
+            {% if block.settings.text != blank %}
+              <p class="pdp-step__text">{{ block.settings.text }}</p>
+            {% endif %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "PDP Features / Steps",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "use_theme_colors",
+      "label": "Use theme colors",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#1f1f1f"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#ef4a65"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "unit": "px",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "unit": "px",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "side_padding",
+      "label": "Side padding",
+      "unit": "px",
+      "min": 0,
+      "max": 80,
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "Margin top",
+      "unit": "px",
+      "min": 0,
+      "max": 100,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "label": "Margin bottom",
+      "unit": "px",
+      "min": 0,
+      "max": 100,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Content max width",
+      "unit": "px",
+      "min": 800,
+      "max": 1600,
+      "step": 10,
+      "default": 1180
+    },
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow label",
+      "default": "How it works"
+    },
+    {
+      "type": "image_picker",
+      "id": "eyebrow_icon",
+      "label": "Eyebrow icon"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Three effortless steps"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size",
+      "unit": "px",
+      "min": 24,
+      "max": 52,
+      "default": 32
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Guide shoppers through the exact journey from unboxing to glowing results."
+    },
+    {
+      "type": "color",
+      "id": "subheading_color",
+      "label": "Subheading color",
+      "default": "#4a4a4a"
+    },
+    {
+      "type": "select",
+      "id": "layout_style",
+      "label": "Layout style",
+      "options": [
+        { "value": "static", "label": "Static side by side" },
+        { "value": "alternating", "label": "Alternate media and copy" }
+      ],
+      "default": "alternating"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_numbers",
+      "label": "Show step numbers",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "media_width",
+      "label": "Media column width (%)",
+      "min": 35,
+      "max": 65,
+      "step": 1,
+      "default": 45
+    },
+    {
+      "type": "color",
+      "id": "media_background",
+      "label": "Media background",
+      "default": "#f6f6f6"
+    },
+    {
+      "type": "range",
+      "id": "media_radius",
+      "label": "Media radius",
+      "unit": "px",
+      "min": 0,
+      "max": 32,
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "video_aspect_ratio",
+      "label": "Video aspect ratio (height % of width)",
+      "min": 56,
+      "max": 140,
+      "step": 1,
+      "default": 125
+    },
+    {
+      "type": "range",
+      "id": "step_gap",
+      "label": "Gap between steps",
+      "unit": "px",
+      "min": 8,
+      "max": 60,
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "step_padding",
+      "label": "Step padding",
+      "unit": "px",
+      "min": 12,
+      "max": 48,
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "step_radius",
+      "label": "Step radius",
+      "unit": "px",
+      "min": 0,
+      "max": 28,
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "step_border_width",
+      "label": "Step border width",
+      "unit": "px",
+      "min": 0,
+      "max": 3,
+      "default": 1
+    },
+    {
+      "type": "color",
+      "id": "step_border_color",
+      "label": "Step border color",
+      "default": "#ececec"
+    },
+    {
+      "type": "color",
+      "id": "step_background",
+      "label": "Step background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "step_title_size",
+      "label": "Step title size",
+      "unit": "px",
+      "min": 16,
+      "max": 32,
+      "default": 20
+    },
+    {
+      "type": "color",
+      "id": "step_text_color",
+      "label": "Step text color",
+      "default": "#2a2a2a"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "step",
+      "name": "Step",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "video_url",
+          "id": "video_url",
+          "label": "Video URL",
+          "accept": ["youtube", "vimeo"]
+        },
+        {
+          "type": "text",
+          "id": "media_alt",
+          "label": "Media alt text",
+          "default": "Step media"
+        },
+        {
+          "type": "text",
+          "id": "badge",
+          "label": "Badge"
+        },
+        {
+          "type": "image_picker",
+          "id": "badge_icon",
+          "label": "Badge icon"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Title",
+          "default": "Apply evenly"
+        },
+        {
+          "type": "textarea",
+          "id": "text",
+          "label": "Description",
+          "default": "Use twice daily on clean skin for the fastest results."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "PDP Features / Steps",
+      "blocks": [
+        { "type": "step" },
+        { "type": "step" },
+        { "type": "step" }
+      ]
+    }
+  ]
+}
+{% endschema %}

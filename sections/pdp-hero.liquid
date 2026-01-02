@@ -1,0 +1,695 @@
+{% liquid
+  assign use_theme_colors = section.settings.use_theme_colors
+  if use_theme_colors == nil
+    assign use_theme_colors = true
+  endif
+
+  if use_theme_colors
+    assign background_color = settings.global_section_background_color
+    assign text_color = settings.global_section_text_color
+    assign accent_color = settings.global_section_accent_1_color
+  else
+    assign background_color = section.settings.background_color
+    assign text_color = section.settings.text_color
+    assign accent_color = section.settings.accent_color
+  endif
+
+  assign button_bg = section.settings.button_background | default: accent_color
+  assign button_text_color = section.settings.button_text_color | default: settings.global_section_background_color
+  assign container_width = section.settings.max_width | default: 1200
+  assign product_form_id = 'pdp-hero-form-' | append: section.id
+%}
+
+<style>
+  .pdp-hero.section-{{ section.id }} {
+    background: {{ background_color }};
+    color: {{ text_color }};
+    padding: {{ section.settings.padding_top }}px {{ section.settings.side_padding }}px {{ section.settings.padding_bottom }}px;
+    margin-top: {{ section.settings.margin_top }}px;
+    margin-bottom: {{ section.settings.margin_bottom }}px;
+    letter-spacing: var(--letter-spacing-body);
+  }
+
+  .pdp-hero__inner {
+    max-width: {{ container_width }}px;
+    margin: 0 auto;
+    display: grid;
+    gap: {{ section.settings.content_gap }}px;
+    align-items: center;
+    grid-template-columns: 1fr;
+  }
+
+  @media (min-width: 900px) {
+    .pdp-hero__inner {
+      grid-template-columns: {% if section.settings.media_alignment == 'left' %} minmax(0, {{ section.settings.media_width }}%) minmax(0, {{ 100 | minus: section.settings.media_width }}%) {% else %} minmax(0, {{ 100 | minus: section.settings.media_width }}%) minmax(0, {{ section.settings.media_width }}%) {% endif %};
+    }
+  }
+
+  .pdp-hero__media {
+    position: relative;
+    border-radius: {{ section.settings.media_radius }}px;
+    overflow: hidden;
+    background: {{ section.settings.media_background }};
+  }
+
+  .pdp-hero__media img,
+  .pdp-hero__media video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .pdp-hero__video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: {{ section.settings.video_aspect_ratio | default: 125 }}%;
+  }
+
+  .pdp-hero__video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  .pdp-hero__content {
+    display: grid;
+    gap: 14px;
+    align-content: start;
+  }
+
+  .pdp-hero__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: {{ accent_color | color_lighten: 35 }};
+    color: {{ accent_color }};
+    border-radius: 999px;
+    font-weight: var(--font-weight-medium);
+    width: fit-content;
+  }
+
+  .pdp-hero__heading {
+    font-size: {{ section.settings.heading_size }}px;
+    margin: 0;
+    letter-spacing: var(--letter-spacing-heading);
+    color: {{ text_color }};
+  }
+
+  .pdp-hero__subheading {
+    margin: 0;
+    color: {{ section.settings.subheading_color | default: text_color }};
+    line-height: 1.5;
+    font-size: {{ section.settings.subheading_size }}px;
+  }
+
+  .pdp-hero__rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: var(--font-weight-medium);
+  }
+
+  .pdp-hero__stars {
+    display: inline-flex;
+    gap: 4px;
+    color: {{ accent_color }};
+  }
+
+  .pdp-hero__bullets {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    gap: 10px;
+  }
+
+  .pdp-hero__bullets li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: {{ section.settings.bullet_background }};
+    color: {{ text_color }};
+  }
+
+  .pdp-hero__highlights {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .pdp-hero__highlight {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: {{ section.settings.highlight_background }};
+    color: {{ text_color }};
+  }
+
+  .pdp-hero__actions {
+    display: grid;
+    gap: 10px;
+  }
+
+  .pdp-hero__payments {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .pdp-hero__payments img {
+    height: {{ section.settings.payment_icon_height }}px;
+    width: auto;
+  }
+
+  .pdp-hero__note {
+    color: {{ section.settings.note_color | default: text_color }};
+    font-size: 14px;
+    margin: 0;
+  }
+
+  .pdp-hero__buttons .shop-add-to-cart-button {
+    width: 100%;
+    background: {{ button_bg }} !important;
+    color: {{ button_text_color }} !important;
+    border-radius: {{ section.settings.button_radius }}px;
+  }
+
+  .pdp-hero__buttons .shop-add-to-cart-button:hover {
+    background: {{ button_bg | color_darken: 5 }} !important;
+  }
+</style>
+
+<div class="pdp-hero section-{{ section.id }}">
+  <div class="pdp-hero__inner{% if section.settings.media_alignment == 'right' %} pdp-hero__inner--reverse{% endif %}">
+    <div class="pdp-hero__media">
+      {% if section.settings.video_url != blank %}
+        <div class="pdp-hero__video-wrapper">
+          {% if section.settings.video_url.type == 'youtube' %}
+            <iframe src="https://www.youtube.com/embed/{{ section.settings.video_url.id }}?rel=0&showinfo=0" allowfullscreen title="{{ section.settings.video_alt | escape }}"></iframe>
+          {% elsif section.settings.video_url.type == 'vimeo' %}
+            <iframe src="https://player.vimeo.com/video/{{ section.settings.video_url.id }}" allowfullscreen title="{{ section.settings.video_alt | escape }}"></iframe>
+          {% endif %}
+        </div>
+      {% elsif section.settings.media_image != blank %}
+        <img src="{{ section.settings.media_image | img_url: '900x' }}" alt="{{ section.settings.media_alt | escape }}" loading="lazy">
+      {% else %}
+        <div style="aspect-ratio: 4 / 5; background: {{ section.settings.media_background }};"></div>
+      {% endif %}
+    </div>
+
+    <div class="pdp-hero__content">
+      {% if section.settings.badge_text != blank %}
+        <div class="pdp-hero__badge">
+          {% if section.settings.badge_icon != blank %}
+            <img src="{{ section.settings.badge_icon | img_url: '80x' }}" alt="" width="20" height="20" loading="lazy">
+          {% endif %}
+          <span>{{ section.settings.badge_text }}</span>
+        </div>
+      {% endif %}
+
+      {% if section.settings.heading != blank %}
+        <h2 class="pdp-hero__heading">{{ section.settings.heading }}</h2>
+      {% endif %}
+
+      {% if section.settings.subheading != blank %}
+        <p class="pdp-hero__subheading">{{ section.settings.subheading }}</p>
+      {% endif %}
+
+      {% if section.settings.show_rating %}
+        <div class="pdp-hero__rating">
+          <div class="pdp-hero__stars">
+            {% for i in (1..5) %}
+              {% assign filled = section.settings.rating_value | default: 4.8 | times: 1 %}
+              {% if filled >= i %}
+                <span aria-hidden="true">★</span>
+              {% elsif filled > i-1 %}
+                <span aria-hidden="true">⯨</span>
+              {% else %}
+                <span aria-hidden="true">☆</span>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <span>{{ section.settings.rating_value | default: 4.8 }} / 5 ({{ section.settings.rating_count | default: '1,200' }})</span>
+        </div>
+      {% endif %}
+
+      {% if section.blocks.size > 0 %}
+        <ul class="pdp-hero__bullets">
+          {% for block in section.blocks %}
+            {% if block.type == 'bullet' %}
+              <li {{ block.shopify_attributes }}>
+                {% if block.settings.icon != blank %}
+                  <img src="{{ block.settings.icon | img_url: '60x' }}" alt="" width="24" height="24" loading="lazy">
+                {% else %}
+                  <span style="color: {{ accent_color }};">•</span>
+                {% endif %}
+                <span>{{ block.settings.text }}</span>
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      {% endif %}
+
+      {% assign highlight_blocks = section.blocks | where: 'type', 'highlight' %}
+      {% if highlight_blocks.size > 0 %}
+        <div class="pdp-hero__highlights">
+          {% for block in highlight_blocks %}
+            <div class="pdp-hero__highlight" {{ block.shopify_attributes }}>
+              {% if block.settings.icon != blank %}
+                <img src="{{ block.settings.icon | img_url: '60x' }}" alt="" width="20" height="20" loading="lazy">
+              {% endif %}
+              <span>{{ block.settings.text }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="pdp-hero__actions">
+        <div class="pdp-hero__buttons">
+          {% if product %}
+            {% render 'buy-buttons',
+              product: product,
+              section_id: section.id,
+              product_form_id: product_form_id,
+              use_custom_button: true,
+              button_text: section.settings.button_text,
+              button_bg_color: button_bg,
+              button_text_color: button_text_color,
+              button_hover_color: section.settings.button_hover_background | default: button_bg,
+              button_icon: section.settings.button_icon,
+              icon_position: 'left',
+              icon_size: 18
+            %}
+          {% else %}
+            <a class="shop-add-to-cart-button" href="{{ section.settings.fallback_link | default: '#' }}" style="display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;background: {{ button_bg }};color: {{ button_text_color }};text-decoration:none;border-radius: {{ section.settings.button_radius }}px;">
+              {{ section.settings.button_text }}
+            </a>
+          {% endif %}
+        </div>
+        {% if section.settings.purchase_note != blank %}
+          <p class="pdp-hero__note">{{ section.settings.purchase_note }}</p>
+        {% endif %}
+      </div>
+
+      {% assign payment_blocks = section.blocks | where: 'type', 'payment_icon' %}
+      {% if payment_blocks.size > 0 %}
+        <div class="pdp-hero__payments">
+          {% for block in payment_blocks %}
+            {% if block.settings.icon != blank %}
+              <img src="{{ block.settings.icon | img_url: '160x' }}" alt="{{ block.settings.alt | escape }}" loading="lazy" {{ block.shopify_attributes }}>
+            {% endif %}
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "PDP Hero",
+  "tag": "section",
+  "class": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "use_theme_colors",
+      "label": "Use theme colors",
+      "default": true
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "accent_color",
+      "label": "Accent color",
+      "default": "#ef4a65"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding top",
+      "unit": "px",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding bottom",
+      "unit": "px",
+      "min": 0,
+      "max": 120,
+      "step": 2,
+      "default": 60
+    },
+    {
+      "type": "range",
+      "id": "side_padding",
+      "label": "Side padding",
+      "unit": "px",
+      "min": 0,
+      "max": 80,
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "Margin top",
+      "unit": "px",
+      "min": 0,
+      "max": 100,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "label": "Margin bottom",
+      "unit": "px",
+      "min": 0,
+      "max": 100,
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Content max width",
+      "min": 800,
+      "max": 1600,
+      "step": 10,
+      "unit": "px",
+      "default": 1180
+    },
+    {
+      "type": "range",
+      "id": "content_gap",
+      "label": "Content gap",
+      "unit": "px",
+      "min": 8,
+      "max": 60,
+      "default": 24
+    },
+    {
+      "type": "select",
+      "id": "media_alignment",
+      "label": "Media side",
+      "options": [
+        { "value": "left", "label": "Media left" },
+        { "value": "right", "label": "Media right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "range",
+      "id": "media_width",
+      "label": "Media column width (%)",
+      "min": 35,
+      "max": 65,
+      "step": 1,
+      "default": 48
+    },
+    {
+      "type": "image_picker",
+      "id": "media_image",
+      "label": "Media image"
+    },
+    {
+      "type": "text",
+      "id": "media_alt",
+      "label": "Media alt text",
+      "default": "Product imagery"
+    },
+    {
+      "type": "video_url",
+      "id": "video_url",
+      "label": "Media video URL",
+      "accept": ["youtube", "vimeo"]
+    },
+    {
+      "type": "range",
+      "id": "video_aspect_ratio",
+      "label": "Video aspect ratio (height % of width)",
+      "min": 56,
+      "max": 140,
+      "step": 1,
+      "default": 125
+    },
+    {
+      "type": "text",
+      "id": "video_alt",
+      "label": "Video title",
+      "default": "Product video"
+    },
+    {
+      "type": "color",
+      "id": "media_background",
+      "label": "Media background",
+      "default": "#f6f6f6"
+    },
+    {
+      "type": "range",
+      "id": "media_radius",
+      "label": "Media corner radius",
+      "unit": "px",
+      "min": 0,
+      "max": 32,
+      "default": 16
+    },
+    {
+      "type": "text",
+      "id": "badge_text",
+      "label": "Top badge text",
+      "default": "Limited-time offer"
+    },
+    {
+      "type": "image_picker",
+      "id": "badge_icon",
+      "label": "Top badge icon"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Beautiful, visible results in weeks"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size",
+      "unit": "px",
+      "min": 28,
+      "max": 64,
+      "default": 40
+    },
+    {
+      "type": "textarea",
+      "id": "subheading",
+      "label": "Subheading",
+      "default": "Clinically-backed formulas, dermatologist tested, and loved by thousands."
+    },
+    {
+      "type": "range",
+      "id": "subheading_size",
+      "label": "Subheading size",
+      "unit": "px",
+      "min": 14,
+      "max": 26,
+      "default": 18
+    },
+    {
+      "type": "color",
+      "id": "subheading_color",
+      "label": "Subheading color",
+      "default": "#4a4a4a"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_rating",
+      "label": "Show rating",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "rating_value",
+      "label": "Rating value",
+      "default": "4.8"
+    },
+    {
+      "type": "text",
+      "id": "rating_count",
+      "label": "Rating count",
+      "default": "1,200"
+    },
+    {
+      "type": "color",
+      "id": "bullet_background",
+      "label": "Bullet background",
+      "default": "#f8f8f8"
+    },
+    {
+      "type": "color",
+      "id": "highlight_background",
+      "label": "Highlight background",
+      "default": "#f0f5ff"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Add to cart"
+    },
+    {
+      "type": "url",
+      "id": "fallback_link",
+      "label": "Fallback link when no product",
+      "default": "/collections/all"
+    },
+    {
+      "type": "select",
+      "id": "button_icon",
+      "label": "Button icon",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "cart", "label": "Cart" },
+        { "value": "bag", "label": "Bag" },
+        { "value": "arrow", "label": "Arrow" }
+      ],
+      "default": "cart"
+    },
+    {
+      "type": "color",
+      "id": "button_background",
+      "label": "Button background",
+      "default": "#ef4a65"
+    },
+    {
+      "type": "color",
+      "id": "button_hover_background",
+      "label": "Button hover background",
+      "default": "#d83f57"
+    },
+    {
+      "type": "color",
+      "id": "button_text_color",
+      "label": "Button text color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "button_radius",
+      "label": "Button radius",
+      "unit": "px",
+      "min": 0,
+      "max": 30,
+      "default": 10
+    },
+    {
+      "type": "text",
+      "id": "purchase_note",
+      "label": "Note under button",
+      "default": "60-day happiness guarantee. Free US shipping over $50."
+    },
+    {
+      "type": "range",
+      "id": "payment_icon_height",
+      "label": "Payment icon height",
+      "unit": "px",
+      "min": 16,
+      "max": 48,
+      "default": 24
+    },
+    {
+      "type": "color",
+      "id": "note_color",
+      "label": "Note color",
+      "default": "#3a3a3a"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "bullet",
+      "name": "Bullet point",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Dermatologist tested and approved"
+        }
+      ]
+    },
+    {
+      "type": "highlight",
+      "name": "Highlight badge",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Highlight text",
+          "default": "Made in the USA"
+        }
+      ]
+    },
+    {
+      "type": "payment_icon",
+      "name": "Payment icon",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "icon",
+          "label": "Icon"
+        },
+        {
+          "type": "text",
+          "id": "alt",
+          "label": "Alt text",
+          "default": "Payment option"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "PDP Hero",
+      "blocks": [
+        { "type": "bullet" },
+        { "type": "bullet" },
+        { "type": "highlight" },
+        { "type": "payment_icon" }
+      ]
+    }
+  ]
+}
+{% endschema %}
